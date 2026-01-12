@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import time
 import logging
+import uuid
 from prometheus_client import Counter, generate_latest
 from fastapi import Response
 
@@ -10,7 +11,7 @@ app = FastAPI(title="Book Library API")
 
 # Metrics & Logging
 REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP Requests')
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("api")
 
 # Data Model
@@ -34,9 +35,13 @@ book_id = 6
 # Middleware
 @app.middleware("http")
 async def monitor_requests(request: Request, call_next):
+    request_id = str(uuid.uuid4())
     REQUEST_COUNT.inc()
-    logger.info(f"{request.method} {request.url.path}")
-    return await call_next(request)
+    logger.info(f"[{request_id}] {request.method} {request.url.path}")
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    logger.info(f"[{request_id}] Response: {response.status_code}")
+    return response
 
 # Endpoints
 @app.get("/")
