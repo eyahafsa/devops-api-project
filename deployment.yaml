@@ -15,6 +15,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: EyaHafsa/devops-api:latest
+        image: devops-api:v1
+        imagePullPolicy: Never
         ports:
         - containerPort: 8000
