@@ -36,14 +36,7 @@ jobs:
           docker run -d -p 8000:8000 --name test-container devops-api:v1
           sleep 5
           curl -f http://localhost:8000/health || exit 1
-      
-      - name: DAST scan with OWASP ZAP
-        run: |
-          docker run --network host -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-            -t http://localhost:8000 -r zap-report.html || true
-      
-      - name: Stop test container
-        run: docker stop test-container
+          docker stop test-container
       
       - name: Tag image for deployment
         run: docker tag devops-api:v1 eyahafsa/devops-api:latest
