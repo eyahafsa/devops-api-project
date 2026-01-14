@@ -14,6 +14,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: |
+          pip install bandit
+      
+      - name: Security scan with Bandit
+        run: |
+          bandit -r . -f txt || true
+          bandit -r . -ll -ii
+      
       - name: Build Docker image
         run: docker build -t devops-api:v1 .
       
@@ -22,4 +36,19 @@ jobs:
           docker run -d -p 8000:8000 --name test-container devops-api:v1
           sleep 5
           curl -f http://localhost:8000/health || exit 1
-          docker stop test-container
+      
+      - name: DAST scan with OWASP ZAP
+        run: |
+          docker run --network host -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t http://localhost:8000 -r zap-report.html || true
+      
+      - name: Stop test container
+        run: docker stop test-container
+      
+      - name: Tag image for deployment
+        run: docker tag devops-api:v1 eyahafsa/devops-api:latest
+      
+      - name: Simulate deployment
+        run: echo "✅ Image ready for deployment to eyahafsa/devops-api:latest"
+
+  run: docker push eyahafsa/devops-api:latest
