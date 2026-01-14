@@ -50,5 +50,3 @@ jobs:
       
       - name: Simulate deployment
         run: echo "✅ Image ready for deployment to eyahafsa/devops-api:latest"
-
-  run: docker push eyahafsa/devops-api:latest
